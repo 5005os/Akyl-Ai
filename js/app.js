@@ -1,0 +1,229 @@
+/* ============ AI KYRGYZSTAN — логика приложения ============ */
+(function () {
+  "use strict";
+
+  const K = window.KNOWLEDGE || {};
+
+  // ---------------------------------------------------------------
+  // 1. РЕНДЕР РАЗДЕЛОВ ИЗ БАЗЫ ЗНАНИЙ
+  // ---------------------------------------------------------------
+  function renderHistory() {
+    const el = document.getElementById("timeline");
+    if (!el || !K.history) return;
+    el.innerHTML = K.history.map(h => `
+      <div class="tl-item">
+        <div class="tl-period">${h.period}</div>
+        <div class="tl-title">${h.title}</div>
+        <div class="tl-text">${h.text}</div>
+      </div>`).join("");
+  }
+
+  function renderForecasts() {
+    const el = document.getElementById("forecastCards");
+    if (!el || !K.forecasts) return;
+    el.innerHTML = K.forecasts.map(f => `
+      <div class="fcard">
+        <div class="icon">${f.icon}</div>
+        <div class="cat">${f.category}</div>
+        <h3>${f.title}</h3>
+        <p>${f.text}</p>
+        <span class="horizon">📅 ${f.horizon}</span>
+      </div>`).join("");
+  }
+
+  function renderSources() {
+    const el = document.getElementById("sourcesGrid");
+    if (!el || !K.sources) return;
+    el.innerHTML = K.sources.map(s => `
+      <a class="source-item" href="${s.url}" target="_blank" rel="noopener">
+        <span class="stype">${s.type}</span>
+        <span class="sname">${s.name}</span>
+        <span class="surl">${s.url.replace(/^https?:\/\//, "")}</span>
+      </a>`).join("");
+  }
+
+  // ---------------------------------------------------------------
+  // 2. ОФЛАЙН-ИИ: поиск ответа в базе знаний
+  // ---------------------------------------------------------------
+  function offlineAnswer(question) {
+    const q = question.toLowerCase();
+
+    // Поиск по парам «вопрос-ответ»
+    for (const item of (K.qa || [])) {
+      if (item.keys.some(key => q.includes(key))) return item.answer;
+    }
+
+    // История по ключевым словам
+    if (q.includes("истори") || q.includes("кратко")) {
+      const top = (K.history || []).slice(0, 5)
+        .map(h => `• ${h.period} — ${h.title}`).join("\n");
+      return "Краткая история Кыргызстана:\n" + top + "\n\nСпросите про конкретный период подробнее.";
+    }
+
+    // Прогнозы
+    if (q.includes("прогноз") || q.includes("будущ") || q.includes("развит")) {
+      const top = (K.forecasts || []).slice(0, 4)
+        .map(f => `${f.icon} ${f.title} (${f.horizon}): ${f.text}`).join("\n\n");
+      return "Прогнозы развития Кыргызстана:\n\n" + top;
+    }
+
+    // Общие факты
+    if (q.includes("факт") || q.includes("расскажи о") || q.includes("о кыргызстан")) {
+      const f = K.facts || {};
+      return `Кыргызстан — страна в Центральной Азии.\n` +
+        `🏙️ Столица: ${f.capital}\n👥 Население: ${f.population}\n` +
+        `📐 Площадь: ${f.area}\n🗣️ Языки: ${f.languages}\n` +
+        `💵 Валюта: ${f.currency}\n🎉 Независимость: ${f.independence}\n` +
+        `🏔️ Высшая точка: ${f.highestPoint}`;
+    }
+
+    // Приветствия
+    if (q.includes("салам") || q.includes("привет") || q.includes("здрав") || q.includes("ассалам")) {
+      return "Салам! 👋 Рад помочь. Спросите меня про историю, географию, прогнозы или культуру Кыргызстана.";
+    }
+
+    return "Я пока знаю ограниченный набор тем о Кыргызстане (история, Иссык-Куль, Манас, экономика, прогнозы). " +
+      "Попробуйте переформулировать вопрос или подключите Claude API в настройках ⚙️ ниже для развёрнутых ответов.";
+  }
+
+  // ---------------------------------------------------------------
+  // 3. ОНЛАЙН-ИИ: запрос к Claude API (если есть ключ)
+  // ---------------------------------------------------------------
+  async function onlineAnswer(question) {
+    const key = localStorage.getItem("aikg_api_key");
+    if (!key) return null;
+
+    const systemPrompt =
+      "Ты — национальный ИИ-ассистент Кыргызстана. Отвечай точно, дружелюбно, " +
+      "на русском или кыргызском языке (как спросили). Специализируешься на истории, " +
+      "географии, культуре, экономике и прогнозах развития Кыргызстана.";
+
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-opus-4-8",
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: [{ role: "user", content: question }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error("API " + res.status + ": " + err.slice(0, 200));
+    }
+    const data = await res.json();
+    return (data.content && data.content[0] && data.content[0].text) || "(пустой ответ)";
+  }
+
+  // ---------------------------------------------------------------
+  // 4. ИНТЕРФЕЙС ЧАТА
+  // ---------------------------------------------------------------
+  const chatWindow = document.getElementById("chatWindow");
+  const chatForm = document.getElementById("chatForm");
+  const chatText = document.getElementById("chatText");
+
+  function addMessage(text, who) {
+    const msg = document.createElement("div");
+    msg.className = "msg " + who;
+    msg.innerHTML =
+      `<div class="avatar">${who === "user" ? "Вы" : "AI"}</div>` +
+      `<div class="bubble"></div>`;
+    msg.querySelector(".bubble").textContent = text;
+    chatWindow.appendChild(msg);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    return msg;
+  }
+
+  function addTyping() {
+    const msg = document.createElement("div");
+    msg.className = "msg bot";
+    msg.innerHTML = `<div class="avatar">AI</div><div class="bubble typing">печатает…</div>`;
+    chatWindow.appendChild(msg);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    return msg;
+  }
+
+  async function handleAsk(question) {
+    addMessage(question, "user");
+    const typing = addTyping();
+
+    try {
+      let answer = null;
+      const hasKey = !!localStorage.getItem("aikg_api_key");
+      if (hasKey) {
+        try {
+          answer = await onlineAnswer(question);
+        } catch (e) {
+          answer = "⚠️ Не удалось связаться с Claude API (" + e.message + ").\n\n" +
+            "Отвечаю из базы знаний:\n\n" + offlineAnswer(question);
+        }
+      } else {
+        // небольшая задержка для естественности
+        await new Promise(r => setTimeout(r, 350));
+        answer = offlineAnswer(question);
+      }
+      typing.remove();
+      addMessage(answer, "bot");
+    } catch (e) {
+      typing.remove();
+      addMessage("Произошла ошибка: " + e.message, "bot");
+    }
+  }
+
+  if (chatForm) {
+    chatForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const q = chatText.value.trim();
+      if (!q) return;
+      chatText.value = "";
+      handleAsk(q);
+    });
+  }
+
+  // Кнопки-подсказки
+  document.querySelectorAll("#suggestions button").forEach(btn => {
+    btn.addEventListener("click", () => handleAsk(btn.textContent));
+  });
+
+  // ---------------------------------------------------------------
+  // 5. СОХРАНЕНИЕ API-КЛЮЧА
+  // ---------------------------------------------------------------
+  const saveKeyBtn = document.getElementById("saveKey");
+  const apiKeyInput = document.getElementById("apiKey");
+  const keyStatus = document.getElementById("keyStatus");
+
+  function refreshKeyStatus() {
+    if (!keyStatus) return;
+    const has = !!localStorage.getItem("aikg_api_key");
+    keyStatus.textContent = has ? "✅ Ключ сохранён" : "";
+    keyStatus.style.color = "var(--red)";
+  }
+
+  if (saveKeyBtn) {
+    saveKeyBtn.addEventListener("click", () => {
+      const val = apiKeyInput.value.trim();
+      if (val) {
+        localStorage.setItem("aikg_api_key", val);
+        apiKeyInput.value = "";
+      } else {
+        localStorage.removeItem("aikg_api_key");
+      }
+      refreshKeyStatus();
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // ИНИЦИАЛИЗАЦИЯ
+  // ---------------------------------------------------------------
+  renderHistory();
+  renderForecasts();
+  renderSources();
+  refreshKeyStatus();
+})();

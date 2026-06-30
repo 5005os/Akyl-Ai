@@ -1,0 +1,201 @@
+/* ============ AI KYRGYZSTAN — стили ============ */
+:root {
+  --red: #e30613;        /* красный флага Кыргызстана */
+  --red-dark: #b80410;
+  --yellow: #ffce00;     /* солнце */
+  --ink: #14161c;
+  --ink-soft: #4a4f5c;
+  --bg: #ffffff;
+  --bg-alt: #f6f8fb;
+  --card: #ffffff;
+  --line: #e6e9ef;
+  --radius: 18px;
+  --shadow: 0 10px 40px rgba(20, 22, 28, .08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.6;
+}
+
+.container { width: min(1100px, 92%); margin: 0 auto; }
+
+a { color: inherit; text-decoration: none; }
+
+/* ---------- Кнопки ---------- */
+.btn {
+  display: inline-block;
+  padding: 13px 26px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.btn-primary { background: var(--red); color: #fff; }
+.btn-primary:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 8px 22px rgba(227, 6, 19, .3); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover { border-color: var(--red); color: var(--red); }
+
+/* ---------- Шапка ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.nav { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; }
+.logo-mark {
+  background: var(--red); color: #fff; width: 38px; height: 38px;
+  display: grid; place-items: center; border-radius: 10px; font-size: 16px;
+}
+.nav-links { display: flex; gap: 26px; font-weight: 600; font-size: 15px; }
+.nav-links a:hover { color: var(--red); }
+
+/* ---------- Hero ---------- */
+.hero {
+  background: radial-gradient(1200px 500px at 50% -10%, #fff5f5 0%, #fff 60%);
+  padding: 80px 0 70px;
+  text-align: center;
+}
+.hero-flag { font-size: 56px; }
+.hero h1 { font-size: clamp(34px, 6vw, 60px); font-weight: 800; line-height: 1.1; margin: 12px 0 18px; }
+.grad { background: linear-gradient(90deg, var(--red), #ff6a3d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-sub { font-size: 19px; color: var(--ink-soft); max-width: 640px; margin: 0 auto 30px; }
+.hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.hero-stats { display: flex; gap: 40px; justify-content: center; margin-top: 50px; flex-wrap: wrap; }
+.hero-stats div { display: flex; flex-direction: column; }
+.hero-stats strong { font-size: 28px; color: var(--red); }
+.hero-stats span { color: var(--ink-soft); font-size: 14px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* ---------- Секции ---------- */
+.section { padding: 80px 0; }
+.section-alt { background: var(--bg-alt); }
+.section-title { font-size: clamp(26px, 4vw, 38px); font-weight: 800; text-align: center; }
+.section-title.left { text-align: left; }
+.section-lead { text-align: center; color: var(--ink-soft); max-width: 680px; margin: 12px auto 40px; font-size: 17px; }
+
+/* ---------- Чат ---------- */
+.chat-card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 18px; max-width: 760px; margin: 0 auto;
+}
+.chat-window {
+  height: 420px; overflow-y: auto; padding: 10px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.msg { display: flex; gap: 10px; align-items: flex-start; }
+.msg.user { flex-direction: row-reverse; }
+.avatar {
+  flex: 0 0 36px; width: 36px; height: 36px; border-radius: 10px;
+  display: grid; place-items: center; font-weight: 800; font-size: 13px;
+  background: var(--red); color: #fff;
+}
+.msg.user .avatar { background: var(--ink); }
+.bubble {
+  background: var(--bg-alt); padding: 12px 16px; border-radius: 14px;
+  max-width: 78%; font-size: 15.5px; white-space: pre-wrap;
+}
+.msg.user .bubble { background: var(--red); color: #fff; }
+.bubble.typing { color: var(--ink-soft); font-style: italic; }
+
+.chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 4px; }
+.chat-suggestions button {
+  background: #fff; border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 14px; font-size: 13.5px; cursor: pointer; color: var(--ink-soft);
+  font-family: inherit; transition: all .15s;
+}
+.chat-suggestions button:hover { border-color: var(--red); color: var(--red); }
+
+.chat-input { display: flex; gap: 10px; margin-top: 6px; }
+.chat-input input {
+  flex: 1; padding: 14px 18px; border: 1px solid var(--line);
+  border-radius: 999px; font-size: 15px; font-family: inherit; outline: none;
+}
+.chat-input input:focus { border-color: var(--red); }
+
+.api-settings { margin-top: 16px; font-size: 14px; color: var(--ink-soft); }
+.api-settings summary { cursor: pointer; font-weight: 600; }
+.api-settings p { margin: 10px 0; }
+.api-settings input {
+  width: 100%; padding: 11px 14px; border: 1px solid var(--line);
+  border-radius: 10px; font-family: inherit; margin-bottom: 10px;
+}
+.key-status { margin-left: 10px; font-weight: 600; }
+
+/* ---------- Таймлайн (история) ---------- */
+.timeline { max-width: 760px; margin: 0 auto; position: relative; padding-left: 30px; }
+.timeline::before {
+  content: ""; position: absolute; left: 8px; top: 6px; bottom: 6px;
+  width: 3px; background: linear-gradient(var(--red), var(--yellow));
+  border-radius: 3px;
+}
+.tl-item { position: relative; margin-bottom: 30px; }
+.tl-item::before {
+  content: ""; position: absolute; left: -29px; top: 4px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--red); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--red);
+}
+.tl-period { font-size: 13px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: .5px; }
+.tl-title { font-size: 19px; font-weight: 700; margin: 2px 0 6px; }
+.tl-text { color: var(--ink-soft); }
+
+/* ---------- Карточки прогнозов ---------- */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.fcard {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 24px; box-shadow: var(--shadow); transition: transform .15s;
+}
+.fcard:hover { transform: translateY(-4px); }
+.fcard .icon { font-size: 32px; }
+.fcard .cat { font-size: 12px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: .5px; margin-top: 8px; }
+.fcard h3 { font-size: 20px; margin: 4px 0 8px; }
+.fcard p { color: var(--ink-soft); font-size: 15px; }
+.fcard .horizon { display: inline-block; margin-top: 12px; background: var(--bg-alt); padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+
+/* ---------- Источники ---------- */
+.sources-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.source-item {
+  display: flex; flex-direction: column; gap: 4px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px 20px; transition: all .15s;
+}
+.source-item:hover { border-color: var(--red); transform: translateY(-2px); }
+.source-item .stype { font-size: 12px; font-weight: 700; color: var(--red); text-transform: uppercase; }
+.source-item .sname { font-weight: 700; }
+.source-item .surl { font-size: 13px; color: var(--ink-soft); word-break: break-all; }
+
+/* ---------- О проекте ---------- */
+.about-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: start; }
+.about-grid h3 { margin: 22px 0 10px; font-size: 18px; }
+.about-grid p { color: var(--ink-soft); }
+.check-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.check-list li { padding-left: 28px; position: relative; color: var(--ink-soft); }
+.check-list li::before { content: "✅"; position: absolute; left: 0; }
+.about-card {
+  background: linear-gradient(160deg, #fff, var(--bg-alt));
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 28px; box-shadow: var(--shadow);
+}
+.about-card h3 { margin-top: 0; }
+.about-card p { margin-bottom: 12px; }
+
+/* ---------- Подвал ---------- */
+.site-footer { background: var(--ink); color: #fff; padding: 40px 0; text-align: center; }
+.site-footer .muted { color: #9aa0ad; font-size: 14px; margin-top: 6px; }
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 760px) {
+  .nav-links { display: none; }
+  .about-grid { grid-template-columns: 1fr; }
+  .hero-stats { gap: 24px; }
+}
