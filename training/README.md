@@ -12,12 +12,21 @@
 
 ## 🚀 Как обучить свою модель (пошагово)
 
-1. Открой **Google Colab** → https://colab.research.google.com
-2. Загрузи ноутбук: **File → Upload notebook →** выбери `train_akylai.ipynb`
-   *(или File → Open notebook → GitHub → вставь ссылку на репозиторий)*
-3. Включи бесплатный GPU: **Runtime → Change runtime type → T4 GPU**
-4. Запускай ячейки по порядку (кнопка ▶ слева)
-5. Через ~30–60 минут получишь **свою модель AkylAi** 🎉
+### Открыть ноутбук одной кнопкой
+
+[![Открыть в Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/5005os/Cloud-Code/blob/main/training/train_akylai.ipynb)
+
+Или ссылкой: **https://colab.research.google.com/github/5005os/Cloud-Code/blob/main/training/train_akylai.ipynb**
+
+### Дальше:
+
+1. Войди в свой **Google-аккаунт (Gmail)**, если попросит.
+2. Включи бесплатный GPU: **Среда выполнения → Сменить среду выполнения → `T4 GPU` → Сохранить**.
+3. Нажимай ▶ на каждом блоке **по порядку, сверху вниз** — жди зелёную галочку ✅, потом следующий.
+4. Блок 6 (обучение) — самый долгий, ~30–50 минут. Не закрывай вкладку.
+5. Блок 9 сам скачает готовую модель `akylai_model.zip` в твои «Загрузки». 🎉
+
+💡 Если какой-то блок покажет **красную ошибку** — скопируй её текст и пришли Claude, он подскажет.
 
 ## 💾 Что получишь
 
