@@ -319,6 +319,39 @@
     return (el && el.value) || DEFAULT_AI_MODEL;
   }
 
+  // Понятное название модели для сообщений
+  function modelLabel() {
+    const map = { "openai": "GPT", "searchgpt": "GPT + поиск", "mistral": "Mistral", "__ollama__": "Мой Mac (Ollama)" };
+    return map[selectedModel()] || selectedModel();
+  }
+
+  // Запрос к твоей модели на Mac (Ollama, OpenAI-совместимый API)
+  async function askOllama(question) {
+    const recent = convo.slice(-6);
+    const messages = [{ role: "system", content: SYSTEM_PROMPT }]
+      .concat(recent, [{ role: "user", content: question }]);
+    const modelEl = document.getElementById("ollamaModel");
+    const model = (modelEl && modelEl.value.trim()) || "qwen2.5:3b";
+    let res;
+    try {
+      res = await fetch("http://localhost:11434/v1/chat/completions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ model: model, messages: messages })
+      });
+    } catch (e) {
+      throw new Error("не вижу Ollama на Mac. Запусти Ollama и модель («ollama run " + model + "»), и открой сайт в Chrome на этом же Mac.");
+    }
+    if (!res.ok) throw new Error("Ollama ответил ошибкой (" + res.status + "). Проверь, что модель «" + model + "» запущена.");
+    const data = await res.json();
+    const m = data && data.choices && data.choices[0] && data.choices[0].message;
+    const answer = (m && m.content || "").trim();
+    if (!answer) throw new Error("пустой ответ от Ollama");
+    convo.push({ role: "user", content: question });
+    convo.push({ role: "assistant", content: answer });
+    return answer;
+  }
+
   // Один запрос к конкретной модели
   async function callModel(model, messages) {
     const res = await fetch("https://text.pollinations.ai/openai", {
@@ -385,13 +418,15 @@
       await new Promise(function (r) { setTimeout(r, 200); });
       let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || smallTalk(question) || offlineAnswer(question);
 
-      // 2) Если в базе ответа нет — подключаем Qwen (запасной мозг для свободных вопросов).
+      // 2) Если в базе ответа нет — подключаем выбранную модель (запасной мозг).
       if (!answer) {
         try {
-          answer = await askFreeAI(question);
+          answer = (selectedModel() === "__ollama__")
+            ? await askOllama(question)
+            : await askFreeAI(question);
         } catch (e) {
           answer = "Я отвечаю по своей базе (законы КР, кыргызский язык, ПДД, Конституция, история, культура, туризм). " +
-            "Сейчас не смог подключить модель «" + selectedModel() + "» для свободного ответа (" + e.message + "). " +
+            "Сейчас не смог подключить модель «" + modelLabel() + "» (" + e.message + "). " +
             "Попробуйте ещё раз, выберите другую модель или спросите по этим темам.";
         }
       }
@@ -454,13 +489,24 @@
   (function initModelSelect() {
     const el = document.getElementById("modelSelect");
     if (!el) return;
+    const ollamaInput = document.getElementById("ollamaModel");
+    function toggleOllamaField() {
+      if (ollamaInput) ollamaInput.style.display = (el.value === "__ollama__") ? "inline-block" : "none";
+    }
     const saved = localStorage.getItem("akylai_model");
     if (saved) {
       const ok = Array.prototype.some.call(el.options, function (o) { return o.value === saved; });
       if (ok) el.value = saved;
     }
+    const savedOllama = localStorage.getItem("akylai_ollama_model");
+    if (savedOllama && ollamaInput) ollamaInput.value = savedOllama;
+    toggleOllamaField();
     el.addEventListener("change", function () {
       try { localStorage.setItem("akylai_model", el.value); } catch (e) {}
+      toggleOllamaField();
+    });
+    if (ollamaInput) ollamaInput.addEventListener("change", function () {
+      try { localStorage.setItem("akylai_ollama_model", ollamaInput.value.trim()); } catch (e) {}
     });
   })();
 
