@@ -321,8 +321,49 @@
 
   // Понятное название модели для сообщений
   function modelLabel() {
-    const map = { "openai": "GPT", "searchgpt": "GPT + поиск", "mistral": "Mistral", "__ollama__": "Мой Mac (Ollama)" };
+    const map = { "openai": "GPT", "searchgpt": "GPT + поиск", "mistral": "Mistral",
+                  "__ollama__": "Мой Mac (Ollama)", "__webllm__": "AkylAi в браузере" };
     return map[selectedModel()] || selectedModel();
+  }
+
+  // ---- WebLLM: модель работает прямо в браузере посетителя (для всех, без сервера) ----
+  const WEBLLM_MODEL = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
+  let webllmEngine = null;   // готовый движок
+  let webllmLoading = null;  // промис загрузки (чтобы не грузить дважды)
+
+  async function ensureWebLLM(onProgress) {
+    if (webllmEngine) return webllmEngine;
+    if (!navigator.gpu) {
+      throw new Error("этот браузер не поддерживает WebGPU. Откройте сайт в Chrome или Edge на компьютере (или на новом телефоне).");
+    }
+    if (!webllmLoading) {
+      webllmLoading = (async function () {
+        const webllm = await import("https://esm.run/@mlc-ai/web-llm");
+        const engine = await webllm.CreateMLCEngine(WEBLLM_MODEL, {
+          initProgressCallback: function (r) {
+            if (onProgress) onProgress(r && r.text ? r.text : "загружаю…");
+          }
+        });
+        webllmEngine = engine;
+        return engine;
+      })();
+    }
+    return webllmLoading;
+  }
+
+  async function askWebLLM(question, onProgress) {
+    const engine = await ensureWebLLM(onProgress);
+    if (onProgress) onProgress("думаю…");
+    const recent = convo.slice(-6);
+    const messages = [{ role: "system", content: SYSTEM_PROMPT }]
+      .concat(recent, [{ role: "user", content: question }]);
+    const reply = await engine.chat.completions.create({ messages: messages, temperature: 0.7 });
+    const answer = (reply && reply.choices && reply.choices[0] && reply.choices[0].message
+      && reply.choices[0].message.content || "").trim();
+    if (!answer) throw new Error("пустой ответ от браузерной модели");
+    convo.push({ role: "user", content: question });
+    convo.push({ role: "assistant", content: answer });
+    return answer;
   }
 
   // Запрос к твоей модели на Mac (Ollama, OpenAI-совместимый API)
@@ -421,9 +462,17 @@
       // 2) Если в базе ответа нет — подключаем выбранную модель (запасной мозг).
       if (!answer) {
         try {
-          answer = (selectedModel() === "__ollama__")
-            ? await askOllama(question)
-            : await askFreeAI(question);
+          const model = selectedModel();
+          if (model === "__ollama__") {
+            answer = await askOllama(question);
+          } else if (model === "__webllm__") {
+            const bubble = typing.querySelector(".bubble");
+            answer = await askWebLLM(question, function (txt) {
+              if (bubble) bubble.textContent = "🌐 " + txt;
+            });
+          } else {
+            answer = await askFreeAI(question);
+          }
         } catch (e) {
           answer = "Я отвечаю по своей базе (законы КР, кыргызский язык, ПДД, Конституция, история, культура, туризм). " +
             "Сейчас не смог подключить модель «" + modelLabel() + "» (" + e.message + "). " +
@@ -504,6 +553,10 @@
     el.addEventListener("change", function () {
       try { localStorage.setItem("akylai_model", el.value); } catch (e) {}
       toggleOllamaField();
+      if (el.value === "__webllm__" && !webllmEngine) {
+        addMessage("🌐 «AkylAi в браузере» работает у каждого посетителя без сервера, бесплатно. " +
+          "При первом вопросе модель один раз загрузится (~1 ГБ) — подождите минуту. Нужен Chrome или Edge.", "bot");
+      }
     });
     if (ollamaInput) ollamaInput.addEventListener("change", function () {
       try { localStorage.setItem("akylai_ollama_model", ollamaInput.value.trim()); } catch (e) {}
