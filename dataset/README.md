@@ -23,6 +23,7 @@
 | `traffic_rules_ky.jsonl` | ПДД на кыргызском языке | JSONL |
 | `pdd_exam.jsonl` | Экзаменационные билеты ПДД с правильными ответами | JSONL |
 | `pdd_top50.jsonl` | Топ-50 вопросов-ответов по ПДД КР | JSONL |
+| `tourism.jsonl` | Туризм: Иссык-Куль, Сон-Куль, места, еда, виза | JSONL |
 | `grammar.md` | Грамматика кыргызского (падежи, гармония, глаголы) | Markdown |
 | `phrasebook` (в `data/knowledge.js`) | Разговорник для сайта | JS |
 
