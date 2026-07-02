@@ -51,7 +51,9 @@ for name in ["qa.jsonl", "law_qa.jsonl", "traffic_rules.jsonl",
              "school_biology.jsonl", "school_english.jsonl",
              "national_symbols.jsonl", "famous_people.jsonl",
              "practical_life.jsonl", "nature_animals.jsonl",
-             "cuisine.jsonl"]:
+             "cuisine.jsonl", "religion_customs.jsonl",
+             "cinema_music.jsonl", "world_knowledge.jsonl",
+             "proverbs_riddles.jsonl"]:
     for r in load_jsonl(name):
         add(r.get("instruction"), r.get("output"), r.get("input", ""))
 
