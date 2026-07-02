@@ -48,7 +48,10 @@ for name in ["qa.jsonl", "law_qa.jsonl", "traffic_rules.jsonl",
              "school_subjects.jsonl", "school_geography.jsonl",
              "school_language.jsonl", "school_math.jsonl",
              "school_physics.jsonl", "school_chemistry.jsonl",
-             "school_biology.jsonl", "school_english.jsonl"]:
+             "school_biology.jsonl", "school_english.jsonl",
+             "national_symbols.jsonl", "famous_people.jsonl",
+             "practical_life.jsonl", "nature_animals.jsonl",
+             "cuisine.jsonl"]:
     for r in load_jsonl(name):
         add(r.get("instruction"), r.get("output"), r.get("input", ""))
 
