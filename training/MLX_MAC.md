@@ -14,6 +14,15 @@ pip3 install -U mlx-lm
 ```
 *(если напишет, что `pip3` не найден — установи Python с сайта python.org и повтори)*
 
+Проверь, что установилось:
+```
+python3 -c "import mlx_lm; print('OK', mlx_lm.__version__)"
+```
+Должно вывести `OK` и версию.
+
+> ⚠️ Важно: все команды ниже запускай через **`python3 -m mlx_lm.<команда>`**.
+> Короткие команды вроде `mlx_lm.lora` могут не находиться (`command not found`).
+
 ## Шаг 2. Скачать проект
 ```
 git clone https://github.com/5005os/Cloud-Code.git
@@ -28,7 +37,7 @@ python3 training/prepare_mlx.py
 
 ## Шаг 4. Обучить модель (LoRA) 🔥
 ```
-mlx_lm.lora \
+python3 -m mlx_lm.lora \
   --model mlx-community/Qwen2.5-3B-Instruct-4bit \
   --train \
   --data training/mlx_data \
@@ -44,7 +53,7 @@ mlx_lm.lora \
 
 ## Шаг 5. Проверить свою модель 💬
 ```
-mlx_lm.generate \
+python3 -m mlx_lm.generate \
   --model mlx-community/Qwen2.5-3B-Instruct-4bit \
   --adapter-path training/adapters \
   --prompt "Что предусматривает статья 122 УК КР?"
@@ -53,7 +62,7 @@ mlx_lm.generate \
 
 ## Шаг 6. Собрать готовую модель (объединить)
 ```
-mlx_lm.fuse \
+python3 -m mlx_lm.fuse \
   --model mlx-community/Qwen2.5-3B-Instruct-4bit \
   --adapter-path training/adapters \
   --save-path training/akylai-mlx
@@ -62,7 +71,7 @@ mlx_lm.fuse \
 
 ## Шаг 7. Запустить как сервер (для сайта)
 ```
-mlx_lm.server --model training/akylai-mlx --port 8080
+python3 -m mlx_lm.server --model training/akylai-mlx --port 8080
 ```
 Модель заработает по адресу `http://localhost:8080/v1/chat/completions`
 (OpenAI-совместимый API). Дальше её можно подключить к сайту — скажи Claude,
@@ -74,6 +83,7 @@ mlx_lm.server --model training/akylai-mlx --port 8080
 - **Не хватает памяти / медленно** → используй модель `Qwen2.5-1.5B-Instruct-4bit`
   и уменьши `--iters` до 300.
 - **Хочешь умнее** → пополняй `dataset/`, снова запусти Шаг 3 и обучение.
-- **Команда `mlx_lm.lora` не найдена** → попробуй `python3 -m mlx_lm.lora ...`.
+- **`command not found: mlx_lm.lora`** → запускай через `python3 -m mlx_lm.lora ...`
+  (так во всех шагах). И проверь установку: `python3 -c "import mlx_lm"`.
 
 Сделано для Кыргызстана 🇰🇬
