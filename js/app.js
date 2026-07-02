@@ -270,6 +270,27 @@
     return null;
   }
 
+  // ---- Калькулятор: считает простые примеры («1+2», «5×3», «10/2») ----
+  function calcAnswer(question) {
+    // заменим кыргызские/обычные символы на стандартные
+    let expr = question.replace(/,/g, ".").replace(/×/g, "*").replace(/÷/g, "/").replace(/:/g, "/");
+    // найдём выражение вида число оператор число (хотя бы один оператор)
+    const m = expr.match(/-?\d+(?:\.\d+)?(?:\s*[-+*/]\s*-?\d+(?:\.\d+)?)+/);
+    if (!m) return null;
+    const e = m[0];
+    // безопасность: только цифры, точки, скобки, пробелы и + - * /
+    if (!/^[\d.+\-*/() ]+$/.test(e)) return null;
+    try {
+      const r = Function('"use strict";return (' + e + ")")();
+      if (typeof r !== "number" || !isFinite(r)) return null;
+      const rounded = Math.round(r * 1e6) / 1e6;
+      const pretty = e.replace(/\*/g, " × ").replace(/\//g, " ÷ ").replace(/\+/g, " + ").replace(/-/g, " − ").replace(/\s+/g, " ").trim();
+      return "🔢 " + pretty + " = " + rounded;
+    } catch (err) {
+      return null;
+    }
+  }
+
   // ---- Живое общение (приветствие, благодарность, кто ты) ----
   function smallTalk(question) {
     const q = question.toLowerCase().trim();
@@ -457,7 +478,7 @@
     try {
       // 1) Сначала — точная база проекта (законы КР, факты, память). Это приоритет.
       await new Promise(function (r) { setTimeout(r, 200); });
-      let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || smallTalk(question) || offlineAnswer(question);
+      let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question) || smallTalk(question) || offlineAnswer(question);
 
       // 2) Если в базе ответа нет — подключаем выбранную модель (запасной мозг).
       if (!answer) {
