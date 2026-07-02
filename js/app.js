@@ -270,22 +270,50 @@
     return null;
   }
 
-  // ---- Калькулятор: считает простые примеры («1+2», «5×3», «10/2») ----
+  // ---- Калькулятор: примеры, проценты, степени, корень, словами ----
+  function round6(x) { return Math.round(x * 1e6) / 1e6; }
+
   function calcAnswer(question) {
-    // заменим кыргызские/обычные символы на стандартные
-    let expr = question.replace(/,/g, ".").replace(/×/g, "*").replace(/÷/g, "/").replace(/:/g, "/");
-    // найдём выражение вида число оператор число (хотя бы один оператор)
-    const m = expr.match(/-?\d+(?:\.\d+)?(?:\s*[-+*/]\s*-?\d+(?:\.\d+)?)+/);
-    if (!m) return null;
-    const e = m[0];
-    // безопасность: только цифры, точки, скобки, пробелы и + - * /
+    const q = question.toLowerCase();
+    const num = "(-?\\d+(?:[.,]\\d+)?)";
+
+    // корень из N
+    let m = q.match(new RegExp("корень из\\s*" + num));
+    if (m) {
+      const n = parseFloat(m[1].replace(",", "."));
+      if (n < 0) return "🔢 Корень из отрицательного числа не существует.";
+      return "🔢 √" + n + " = " + round6(Math.sqrt(n));
+    }
+    // N в квадрате / в кубе / в степени M
+    m = q.match(new RegExp(num + "\\s*в\\s*квадрате"));
+    if (m) { const n = parseFloat(m[1].replace(",", ".")); return "🔢 " + n + "² = " + round6(n * n); }
+    m = q.match(new RegExp(num + "\\s*в\\s*кубе"));
+    if (m) { const n = parseFloat(m[1].replace(",", ".")); return "🔢 " + n + "³ = " + round6(n * n * n); }
+    m = q.match(new RegExp(num + "\\s*в\\s*степени\\s*(-?\\d+)"));
+    if (m) { const n = parseFloat(m[1].replace(",", ".")); const p = parseInt(m[2], 10); return "🔢 " + n + " в степени " + p + " = " + round6(Math.pow(n, p)); }
+    // N% от M  или  N процентов от M
+    m = q.match(new RegExp(num + "\\s*(?:%|процент[а-я]*)\\s*от\\s*" + num));
+    if (m) {
+      const p = parseFloat(m[1].replace(",", ".")); const base = parseFloat(m[2].replace(",", "."));
+      return "🔢 " + p + "% от " + base + " = " + round6(base * p / 100);
+    }
+
+    // обычное выражение (значки и слова «плюс», «умножить» и т.п.)
+    let expr = question.replace(/,/g, ".").replace(/×/g, "*").replace(/÷/g, "/").replace(/:/g, "/").toLowerCase();
+    expr = expr
+      .replace(/плюс|кошуу/g, "+")
+      .replace(/умножить на|умножь на|умнож[а-я]*|көбөйт[а-я]*/g, "*")
+      .replace(/разделить на|делить на|поделить на|бөл[а-я]*/g, "/")
+      .replace(/минус|кемит[а-я]*|отнять/g, "-");
+    const em = expr.match(/-?\d+(?:\.\d+)?(?:\s*[-+*/]\s*-?\d+(?:\.\d+)?)+/);
+    if (!em) return null;
+    const e = em[0];
     if (!/^[\d.+\-*/() ]+$/.test(e)) return null;
     try {
       const r = Function('"use strict";return (' + e + ")")();
       if (typeof r !== "number" || !isFinite(r)) return null;
-      const rounded = Math.round(r * 1e6) / 1e6;
       const pretty = e.replace(/\*/g, " × ").replace(/\//g, " ÷ ").replace(/\+/g, " + ").replace(/-/g, " − ").replace(/\s+/g, " ").trim();
-      return "🔢 " + pretty + " = " + rounded;
+      return "🔢 " + pretty + " = " + round6(r);
     } catch (err) {
       return null;
     }
