@@ -42,6 +42,10 @@
 | `practical_life.jsonl` | Практика: экстренные номера, праздники, деньги | JSONL |
 | `nature_animals.jsonl` | Природа и животные Кыргызстана (Красная книга) | JSONL |
 | `cuisine.jsonl` | Национальная кухня Кыргызстана | JSONL |
+| `religion_customs.jsonl` | Религия и обычаи Кыргызстана | JSONL |
+| `cinema_music.jsonl` | Кыргызское кино и музыка | JSONL |
+| `world_knowledge.jsonl` | Мир для школы (материки, космос, учёные) | JSONL |
+| `proverbs_riddles.jsonl` | Пословицы и загадки для детей | JSONL |
 | `grammar.md` | Грамматика кыргызского (падежи, гармония, глаголы) | Markdown |
 | `phrasebook` (в `data/knowledge.js`) | Разговорник для сайта | JS |
 
