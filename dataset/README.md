@@ -37,6 +37,11 @@
 | `school_chemistry.jsonl` | Химия: основы для школы | JSONL |
 | `school_biology.jsonl` | Биология: основы для школы | JSONL |
 | `school_english.jsonl` | Английский язык для школы (с переводом) | JSONL |
+| `national_symbols.jsonl` | Флаг, герб, гимн и символы Кыргызстана | JSONL |
+| `famous_people.jsonl` | Знаменитые кыргызстанцы | JSONL |
+| `practical_life.jsonl` | Практика: экстренные номера, праздники, деньги | JSONL |
+| `nature_animals.jsonl` | Природа и животные Кыргызстана (Красная книга) | JSONL |
+| `cuisine.jsonl` | Национальная кухня Кыргызстана | JSONL |
 | `grammar.md` | Грамматика кыргызского (падежи, гармония, глаголы) | Markdown |
 | `phrasebook` (в `data/knowledge.js`) | Разговорник для сайта | JS |
 
