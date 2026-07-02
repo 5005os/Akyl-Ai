@@ -30,6 +30,8 @@
 | `school_literature.jsonl` | Кыргызская литература для школы (Айтматов, эпос Манас) | JSONL |
 | `school_history.jsonl` | История Кыргызстана для школы (даты, события) | JSONL |
 | `school_subjects.jsonl` | Школьные предметы и термины на кыргызском | JSONL |
+| `school_geography.jsonl` | География Кыргызстана для школы | JSONL |
+| `school_language.jsonl` | Кыргызский язык: грамматика для школы | JSONL |
 | `grammar.md` | Грамматика кыргызского (падежи, гармония, глаголы) | Markdown |
 | `phrasebook` (в `data/knowledge.js`) | Разговорник для сайта | JS |
 
