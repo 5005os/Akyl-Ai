@@ -32,6 +32,11 @@
 | `school_subjects.jsonl` | Школьные предметы и термины на кыргызском | JSONL |
 | `school_geography.jsonl` | География Кыргызстана для школы | JSONL |
 | `school_language.jsonl` | Кыргызский язык: грамматика для школы | JSONL |
+| `school_math.jsonl` | Математика: правила и формулы для школы | JSONL |
+| `school_physics.jsonl` | Физика: основы для школы | JSONL |
+| `school_chemistry.jsonl` | Химия: основы для школы | JSONL |
+| `school_biology.jsonl` | Биология: основы для школы | JSONL |
+| `school_english.jsonl` | Английский язык для школы (с переводом) | JSONL |
 | `grammar.md` | Грамматика кыргызского (падежи, гармония, глаголы) | Markdown |
 | `phrasebook` (в `data/knowledge.js`) | Разговорник для сайта | JS |
 
