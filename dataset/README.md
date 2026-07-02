@@ -27,6 +27,9 @@
 | `culture.jsonl` | Культура и традиции: юрта, Манас, комуз, той, праздники | JSONL |
 | `kyrgyzstan_facts.jsonl` | Свежие факты: население, ВВП, регионы (stat.gov.kg, 24.kg) | JSONL |
 | `bishkek_places.jsonl` | ТЦ, рынки и улицы Бишкека (адреса) | JSONL |
+| `school_literature.jsonl` | Кыргызская литература для школы (Айтматов, эпос Манас) | JSONL |
+| `school_history.jsonl` | История Кыргызстана для школы (даты, события) | JSONL |
+| `school_subjects.jsonl` | Школьные предметы и термины на кыргызском | JSONL |
 | `grammar.md` | Грамматика кыргызского (падежи, гармония, глаголы) | Markdown |
 | `phrasebook` (в `data/knowledge.js`) | Разговорник для сайта | JS |
 
