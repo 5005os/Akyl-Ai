@@ -87,42 +87,6 @@
   }
 
   // ---------------------------------------------------------------
-  // 3. ОНЛАЙН-ИИ: запрос к Claude API (если есть ключ)
-  // ---------------------------------------------------------------
-  async function onlineAnswer(question) {
-    const key = localStorage.getItem("aikg_api_key");
-    if (!key) return null;
-
-    const systemPrompt =
-      "Ты — национальный ИИ-ассистент Кыргызстана. Отвечай точно, дружелюбно, " +
-      "на русском или кыргызском языке (как спросили). Специализируешься на истории, " +
-      "географии, культуре, экономике и прогнозах развития Кыргызстана.";
-
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: "claude-opus-4-8",
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: "user", content: question }]
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error("API " + res.status + ": " + err.slice(0, 200));
-    }
-    const data = await res.json();
-    return (data.content && data.content[0] && data.content[0].text) || "(пустой ответ)";
-  }
-
-  // ---------------------------------------------------------------
   // 4. ИНТЕРФЕЙС ЧАТА
   // ---------------------------------------------------------------
   const chatWindow = document.getElementById("chatWindow");
@@ -359,7 +323,7 @@
     "Сабаа — нет (разг.); Сурап коёюнчу — позвольте спросить.\n" +
     "Сандар (числа): бир(1), эки(2), үч(3), төрт(4), беш(5), алты(6), жети(7), сегиз(8), тогуз(9), он(10).\n" +
     "Отвечай дружелюбно и понятно.";
-  const DEFAULT_AI_MODEL = "openai"; // модель по умолчанию (запасной мозг)
+  const DEFAULT_AI_MODEL = "__webllm__"; // своя модель в браузере (по умолчанию)
   const convo = []; // история диалога для контекста
 
   // Какая модель выбрана в списке на странице
@@ -370,8 +334,7 @@
 
   // Понятное название модели для сообщений
   function modelLabel() {
-    const map = { "openai": "GPT", "searchgpt": "GPT + поиск", "mistral": "Mistral",
-                  "__ollama__": "Моя AkylAi (Mac)", "__webllm__": "AkylAi в браузере" };
+    const map = { "__ollama__": "Моя AkylAi (Mac)", "__webllm__": "AkylAi в браузере" };
     return map[selectedModel()] || selectedModel();
   }
 
@@ -455,45 +418,6 @@
       "(или Ollama) и открой сайт в Chrome на этом же Mac.");
   }
 
-  // Один запрос к конкретной модели
-  async function callModel(model, messages) {
-    const res = await fetch("https://text.pollinations.ai/openai", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ model: model, messages: messages, referrer: "akylai" })
-    });
-    if (!res.ok) throw new Error("сервис занят (" + res.status + ")");
-    const data = await res.json();
-    const m = data && data.choices && data.choices[0] && data.choices[0].message;
-    const answer = (m && m.content || "").trim();
-    if (!answer) throw new Error("пустой ответ");
-    return answer;
-  }
-
-  async function askFreeAI(question) {
-    // последние 6 реплик как контекст (чтобы модель помнила разговор, но не перегружать)
-    const recent = convo.slice(-6);
-    const messages = [{ role: "system", content: SYSTEM_PROMPT }]
-      .concat(recent, [{ role: "user", content: question }]);
-
-    // Пробуем выбранную модель, затем надёжные запасные — чтобы ответ был всегда
-    const tryModels = [selectedModel(), "openai", "mistral"]
-      .filter(function (v, i, a) { return a.indexOf(v) === i; });
-
-    let lastErr = "нет ответа";
-    for (const model of tryModels) {
-      try {
-        const answer = await callModel(model, messages);
-        convo.push({ role: "user", content: question });
-        convo.push({ role: "assistant", content: answer });
-        return answer;
-      } catch (e) {
-        lastErr = e.message;
-      }
-    }
-    throw new Error(lastErr);
-  }
-
   // Команда очистки памяти: «забудь», «очисти историю», «начни заново»
   function isClearCommand(question) {
     return /(забудь( всё| все)?|очисти( историю| чат)?|начни заново|стереть историю|clear)/.test(question.toLowerCase().trim());
@@ -521,24 +445,21 @@
       await new Promise(function (r) { setTimeout(r, 200); });
       let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question) || smallTalk(question) || offlineAnswer(question);
 
-      // 2) Если в базе ответа нет — подключаем выбранную модель (запасной мозг).
+      // 2) Если в базе ответа нет — подключаем СВОЮ модель AkylAi (без чужих ИИ).
       if (!answer) {
         try {
-          const model = selectedModel();
-          if (model === "__ollama__") {
+          if (selectedModel() === "__ollama__") {
             answer = await askOllama(question);
-          } else if (model === "__webllm__") {
+          } else {
             const bubble = typing.querySelector(".bubble");
             answer = await askWebLLM(question, function (txt) {
               if (bubble) bubble.textContent = "🌐 " + txt;
             });
-          } else {
-            answer = await askFreeAI(question);
           }
         } catch (e) {
-          answer = "Я отвечаю по своей базе (законы КР, кыргызский язык, ПДД, Конституция, история, культура, туризм). " +
-            "Сейчас не смог подключить модель «" + modelLabel() + "» (" + e.message + "). " +
-            "Попробуйте ещё раз, выберите другую модель или спросите по этим темам.";
+          answer = "Я отвечаю только по своей базе знаний (законы КР, кыргызский язык, ПДД, Конституция, " +
+            "история, культура, туризм, школа). Модель «" + modelLabel() + "» сейчас недоступна (" + e.message + "). " +
+            "Спросите по этим темам — отвечу из базы.";
         }
       }
 
