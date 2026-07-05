@@ -371,7 +371,7 @@
   // Понятное название модели для сообщений
   function modelLabel() {
     const map = { "openai": "GPT", "searchgpt": "GPT + поиск", "mistral": "Mistral",
-                  "__ollama__": "Мой Mac (Ollama)", "__webllm__": "AkylAi в браузере" };
+                  "__ollama__": "Моя AkylAi (Mac)", "__webllm__": "AkylAi в браузере" };
     return map[selectedModel()] || selectedModel();
   }
 
@@ -415,31 +415,44 @@
     return answer;
   }
 
-  // Запрос к твоей модели на Mac (Ollama, OpenAI-совместимый API)
+  // Запрос к твоей модели на Mac: сначала MLX-сервер (порт 8080, обученная
+  // AkylAi), затем Ollama (порт 11434). Что запущено — то и отвечает.
   async function askOllama(question) {
     const recent = convo.slice(-6);
     const messages = [{ role: "system", content: SYSTEM_PROMPT }]
       .concat(recent, [{ role: "user", content: question }]);
     const modelEl = document.getElementById("ollamaModel");
-    const model = (modelEl && modelEl.value.trim()) || "qwen2.5:3b";
-    let res;
-    try {
-      res = await fetch("http://localhost:11434/v1/chat/completions", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ model: model, messages: messages })
-      });
-    } catch (e) {
-      throw new Error("не вижу Ollama на Mac. Запусти Ollama и модель («ollama run " + model + "»), и открой сайт в Chrome на этом же Mac.");
+    const ollamaModel = (modelEl && modelEl.value.trim()) || "qwen2.5:3b";
+
+    const endpoints = [
+      { url: "http://localhost:8080/v1/chat/completions", model: "akylai", name: "AkylAi (MLX)" },
+      { url: "http://localhost:11434/v1/chat/completions", model: ollamaModel, name: "Ollama" }
+    ];
+
+    let lastErr = null;
+    for (const ep of endpoints) {
+      let res;
+      try {
+        res = await fetch(ep.url, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ model: ep.model, messages: messages, max_tokens: 512 })
+        });
+      } catch (e) {
+        lastErr = ep.name + " не запущен"; continue;
+      }
+      if (!res.ok) { lastErr = ep.name + " ошибка (" + res.status + ")"; continue; }
+      const data = await res.json();
+      const m = data && data.choices && data.choices[0] && data.choices[0].message;
+      const answer = (m && m.content || "").trim();
+      if (!answer) { lastErr = "пустой ответ от " + ep.name; continue; }
+      convo.push({ role: "user", content: question });
+      convo.push({ role: "assistant", content: answer });
+      return answer;
     }
-    if (!res.ok) throw new Error("Ollama ответил ошибкой (" + res.status + "). Проверь, что модель «" + model + "» запущена.");
-    const data = await res.json();
-    const m = data && data.choices && data.choices[0] && data.choices[0].message;
-    const answer = (m && m.content || "").trim();
-    if (!answer) throw new Error("пустой ответ от Ollama");
-    convo.push({ role: "user", content: question });
-    convo.push({ role: "assistant", content: answer });
-    return answer;
+    throw new Error((lastErr || "модель на Mac не найдена") +
+      ". Запусти свою модель: «python3 -m mlx_lm server --model training/akylai-mlx --port 8080» " +
+      "(или Ollama) и открой сайт в Chrome на этом же Mac.");
   }
 
   // Один запрос к конкретной модели
