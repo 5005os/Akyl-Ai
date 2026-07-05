@@ -1,1 +1,1 @@
-# 🇰🇬 AI Kyrgyzstan — национальный ИИ-ассистент
+# 🇰🇬 AI Kyrgyzstan
