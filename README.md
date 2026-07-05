@@ -1,1 +1,1 @@
-# 🇰🇬 AI Kyrgyzstan
+# 🇰🇬 AI Akyl Ai
