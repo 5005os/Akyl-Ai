@@ -1,1 +1,1 @@
-# 🇰🇬 AI Akyl Ai
+# 🇰🇬 Akyl Ai
