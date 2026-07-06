@@ -10,6 +10,7 @@
 | `train_akylai.ipynb` | Google Colab-ноутбук: обучает модель Qwen на твоих данных |
 | `akylai_dataset.jsonl` | Итоговый датасет (создаётся скриптом) |
 | `prepare_mlx.py` | Готовит данные для обучения на Mac (MLX) |
+| `build_qa_bank.py` | Собирает все Q&A в `data/qa_bank.js` — умный поиск на сайте |
 | `MLX_MAC.md` | Инструкция: обучение на Mac (Apple Silicon), без облака |
 
 ## 🖥️ Обучение на Mac (без облака)

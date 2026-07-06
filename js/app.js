@@ -231,6 +231,14 @@
         if (laws[num]) { lastArticle = num; return "Это статья " + num + " УК КР.\n\n" + formatLaw(num) + "\n\n💡 Напишите «подробнее» — покажу полный текст."; }
       }
     }
+
+    // 3) спросили просто «статья» без номера и преступления — подскажем как
+    if (isLaw) {
+      return "Да, я знаю статьи Уголовного кодекса КР! ⚖️ Спросите так:\n" +
+        "• номером — «статья 122» или просто «122»\n" +
+        "• по преступлению — «кража какая статья», «убийство», «взятка»\n" +
+        "И напишите «подробнее» — покажу полный текст статьи.";
+    }
     return null;
   }
 
@@ -281,6 +289,54 @@
     } catch (err) {
       return null;
     }
+  }
+
+  // ---- УМНЫЙ ПОИСК по всему банку знаний (1150+ вопросов-ответов) ----
+  const STOP_WORDS = new Set(["что","как","это","для","при","или","его","она","они","оно","где",
+    "когда","почему","какой","какая","какие","каком","сколько","расскажи","расскажите","знаешь",
+    "знает","знаете","есть","будет","можно","надо","нужно","про","такое","такой","мне","тебя","вас",
+    "простыми","словами","слово","объясни","обьясни","пожалуйста","очень","самый","самая","самое",
+    "назови","скажи","покажи","дай","хочу","знать"]);
+
+  function normWords(s) {
+    return s.toLowerCase().replace(/ё/g, "е")
+      .replace(/[^a-zа-я0-9ңөү\s-]/g, " ")
+      .split(/\s+/).filter(function (w) { return w.length > 2; });
+  }
+  function stem(w) { return w.length > 5 ? w.slice(0, 5) : w; }
+
+  // Индекс банка (строится один раз)
+  let BANK_INDEX = null;
+  function buildBankIndex() {
+    if (BANK_INDEX || !window.QA_BANK) return;
+    BANK_INDEX = window.QA_BANK.map(function (pair) {
+      const stems = new Set(normWords(pair[0]).map(stem));
+      return { stems: stems, size: stems.size, answer: pair[1] };
+    });
+  }
+
+  function bankSearch(question) {
+    buildBankIndex();
+    if (!BANK_INDEX) return null;
+    const qstems = normWords(question)
+      .filter(function (w) { return !STOP_WORDS.has(w); })
+      .map(stem);
+    if (!qstems.length) return null;
+
+    let best = null, bestScore = 0;
+    for (const item of BANK_INDEX) {
+      let hits = 0;
+      for (const w of qstems) { if (item.stems.has(w)) hits++; }
+      if (!hits) continue;
+      // релевантность: совпадений много и вопрос банка похожего размера
+      const score = hits / Math.sqrt(qstems.length * Math.max(item.size, 1));
+      if (score > bestScore) { bestScore = score; best = { answer: item.answer, hits: hits }; }
+    }
+    // порог: минимум 2 совпадения (или 1, если вопрос совсем короткий)
+    if (best && (best.hits >= 2 || (best.hits >= 1 && qstems.length <= 2)) && bestScore >= 0.3) {
+      return best.answer;
+    }
+    return null;
   }
 
   // ---- Живое общение (приветствие, благодарность, кто ты) ----
@@ -390,7 +446,7 @@
     try {
       // 1) Сначала — точная база проекта (законы КР, факты, память). Это приоритет.
       await new Promise(function (r) { setTimeout(r, 200); });
-      let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question) || smallTalk(question) || offlineAnswer(question);
+      let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question) || smallTalk(question) || offlineAnswer(question) || bankSearch(question);
 
       // 2) Если в базе ответа нет — своя модель AkylAi в браузере (без чужих ИИ).
       if (!answer) {
