@@ -323,20 +323,7 @@
     "Сабаа — нет (разг.); Сурап коёюнчу — позвольте спросить.\n" +
     "Сандар (числа): бир(1), эки(2), үч(3), төрт(4), беш(5), алты(6), жети(7), сегиз(8), тогуз(9), он(10).\n" +
     "Отвечай дружелюбно и понятно.";
-  const DEFAULT_AI_MODEL = "__webllm__"; // своя модель в браузере (по умолчанию)
   const convo = []; // история диалога для контекста
-
-  // Какая модель выбрана в списке на странице
-  function selectedModel() {
-    const el = document.getElementById("modelSelect");
-    return (el && el.value) || DEFAULT_AI_MODEL;
-  }
-
-  // Понятное название модели для сообщений
-  function modelLabel() {
-    const map = { "__ollama__": "Моя AkylAi (Mac)", "__webllm__": "AkylAi в браузере" };
-    return map[selectedModel()] || selectedModel();
-  }
 
   // ---- WebLLM: модель работает прямо в браузере посетителя (для всех, без сервера) ----
   const WEBLLM_MODEL = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC";
@@ -378,46 +365,6 @@
     return answer;
   }
 
-  // Запрос к твоей модели на Mac: сначала MLX-сервер (порт 8080, обученная
-  // AkylAi), затем Ollama (порт 11434). Что запущено — то и отвечает.
-  async function askOllama(question) {
-    const recent = convo.slice(-6);
-    const messages = [{ role: "system", content: SYSTEM_PROMPT }]
-      .concat(recent, [{ role: "user", content: question }]);
-    const modelEl = document.getElementById("ollamaModel");
-    const ollamaModel = (modelEl && modelEl.value.trim()) || "qwen2.5:3b";
-
-    const endpoints = [
-      { url: "http://localhost:8080/v1/chat/completions", model: "akylai", name: "AkylAi (MLX)" },
-      { url: "http://localhost:11434/v1/chat/completions", model: ollamaModel, name: "Ollama" }
-    ];
-
-    let lastErr = null;
-    for (const ep of endpoints) {
-      let res;
-      try {
-        res = await fetch(ep.url, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ model: ep.model, messages: messages, max_tokens: 512 })
-        });
-      } catch (e) {
-        lastErr = ep.name + " не запущен"; continue;
-      }
-      if (!res.ok) { lastErr = ep.name + " ошибка (" + res.status + ")"; continue; }
-      const data = await res.json();
-      const m = data && data.choices && data.choices[0] && data.choices[0].message;
-      const answer = (m && m.content || "").trim();
-      if (!answer) { lastErr = "пустой ответ от " + ep.name; continue; }
-      convo.push({ role: "user", content: question });
-      convo.push({ role: "assistant", content: answer });
-      return answer;
-    }
-    throw new Error((lastErr || "модель на Mac не найдена") +
-      ". Запусти свою модель: «python3 -m mlx_lm server --model training/akylai-mlx --port 8080» " +
-      "(или Ollama) и открой сайт в Chrome на этом же Mac.");
-  }
-
   // Команда очистки памяти: «забудь», «очисти историю», «начни заново»
   function isClearCommand(question) {
     return /(забудь( всё| все)?|очисти( историю| чат)?|начни заново|стереть историю|clear)/.test(question.toLowerCase().trim());
@@ -445,20 +392,16 @@
       await new Promise(function (r) { setTimeout(r, 200); });
       let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question) || smallTalk(question) || offlineAnswer(question);
 
-      // 2) Если в базе ответа нет — подключаем СВОЮ модель AkylAi (без чужих ИИ).
+      // 2) Если в базе ответа нет — своя модель AkylAi в браузере (без чужих ИИ).
       if (!answer) {
         try {
-          if (selectedModel() === "__ollama__") {
-            answer = await askOllama(question);
-          } else {
-            const bubble = typing.querySelector(".bubble");
-            answer = await askWebLLM(question, function (txt) {
-              if (bubble) bubble.textContent = "🌐 " + txt;
-            });
-          }
+          const bubble = typing.querySelector(".bubble");
+          answer = await askWebLLM(question, function (txt) {
+            if (bubble) bubble.textContent = "🌐 " + txt;
+          });
         } catch (e) {
-          answer = "Я отвечаю только по своей базе знаний (законы КР, кыргызский язык, ПДД, Конституция, " +
-            "история, культура, туризм, школа). Модель «" + modelLabel() + "» сейчас недоступна (" + e.message + "). " +
+          answer = "Я отвечаю по своей базе знаний (законы КР, кыргызский язык, ПДД, Конституция, " +
+            "история, культура, туризм, школа). Свободный режим (модель в браузере) сейчас недоступен: " + e.message + " " +
             "Спросите по этим темам — отвечу из базы.";
         }
       }
@@ -517,35 +460,6 @@
   // ---------------------------------------------------------------
   // ИНИЦИАЛИЗАЦИЯ
   // ---------------------------------------------------------------
-  // Запоминаем выбранную модель между визитами
-  (function initModelSelect() {
-    const el = document.getElementById("modelSelect");
-    if (!el) return;
-    const ollamaInput = document.getElementById("ollamaModel");
-    function toggleOllamaField() {
-      if (ollamaInput) ollamaInput.style.display = (el.value === "__ollama__") ? "inline-block" : "none";
-    }
-    const saved = localStorage.getItem("akylai_model");
-    if (saved) {
-      const ok = Array.prototype.some.call(el.options, function (o) { return o.value === saved; });
-      if (ok) el.value = saved;
-    }
-    const savedOllama = localStorage.getItem("akylai_ollama_model");
-    if (savedOllama && ollamaInput) ollamaInput.value = savedOllama;
-    toggleOllamaField();
-    el.addEventListener("change", function () {
-      try { localStorage.setItem("akylai_model", el.value); } catch (e) {}
-      toggleOllamaField();
-      if (el.value === "__webllm__" && !webllmEngine) {
-        addMessage("🌐 «AkylAi в браузере» работает у каждого посетителя без сервера, бесплатно. " +
-          "При первом вопросе модель один раз загрузится (~1 ГБ) — подождите минуту. Нужен Chrome или Edge.", "bot");
-      }
-    });
-    if (ollamaInput) ollamaInput.addEventListener("change", function () {
-      try { localStorage.setItem("akylai_ollama_model", ollamaInput.value.trim()); } catch (e) {}
-    });
-  })();
-
   renderHistory();
   renderForecasts();
   renderSources();
