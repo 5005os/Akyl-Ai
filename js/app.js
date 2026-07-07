@@ -93,13 +93,13 @@
   const chatForm = document.getElementById("chatForm");
   const chatText = document.getElementById("chatText");
 
-  // ---- Аватар меняет emoji в зависимости от настроения ответа ----
-  const AVATAR_EMOJI = { neutral: "🙂", happy: "😄", sad: "🥺", angry: "😤", confused: "🤔" };
+  // ---- Аватар бота — логотип AkylAi ----
+  const BOT_AVATAR = `<img src="assets/logo.png" alt="AkylAi" />`;
 
   function addMessage(text, who, mood) {
     const msg = document.createElement("div");
     msg.className = "msg " + who;
-    const avatar = who === "user" ? "Вы" : (AVATAR_EMOJI[mood] || AVATAR_EMOJI.neutral);
+    const avatar = who === "user" ? "Вы" : BOT_AVATAR;
     msg.innerHTML =
       `<div class="avatar">${avatar}</div>` +
       `<div class="bubble"></div>`;
@@ -112,7 +112,7 @@
   function addTyping() {
     const msg = document.createElement("div");
     msg.className = "msg bot";
-    msg.innerHTML = `<div class="avatar">AI</div><div class="bubble typing">печатает…</div>`;
+    msg.innerHTML = `<div class="avatar">${BOT_AVATAR}</div><div class="bubble typing">печатает…</div>`;
     chatWindow.appendChild(msg);
     chatWindow.scrollTop = chatWindow.scrollHeight;
     return msg;
