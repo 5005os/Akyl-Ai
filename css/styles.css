@@ -1,7 +1,7 @@
 /* ============ AI KYRGYZSTAN — стили ============ */
 :root {
-  --red: #e30613;        /* красный флага Кыргызстана */
-  --red-dark: #b80410;
+  --red: #002422;        /* фирменный тёмно-зелёный AkylAi */
+  --red-dark: #00110f;
   --yellow: #ffce00;     /* солнце */
   --ink: #14161c;
   --ink-soft: #4a4f5c;
@@ -40,7 +40,7 @@ a { color: inherit; text-decoration: none; }
   transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
 .btn-primary { background: var(--red); color: #fff; }
-.btn-primary:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 8px 22px rgba(227, 6, 19, .3); }
+.btn-primary:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0, 36, 34, .3); }
 .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .btn-ghost:hover { border-color: var(--red); color: var(--red); }
 
@@ -71,7 +71,7 @@ img.logo-mark {
 }
 .hero-flag { font-size: 56px; }
 .hero h1 { font-size: clamp(34px, 6vw, 60px); font-weight: 800; line-height: 1.1; margin: 12px 0 18px; }
-.grad { background: linear-gradient(90deg, var(--red), #ff6a3d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.grad { background: linear-gradient(90deg, #002422, #2fd575); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero-sub { font-size: 19px; color: var(--ink-soft); max-width: 640px; margin: 0 auto 30px; }
 .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 .hero-stats { display: flex; gap: 40px; justify-content: center; margin-top: 50px; flex-wrap: wrap; }
