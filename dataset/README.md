@@ -46,6 +46,8 @@
 | `cinema_music.jsonl` | Кыргызское кино и музыка | JSONL |
 | `world_knowledge.jsonl` | Мир для школы (материки, космос, учёные) | JSONL |
 | `proverbs_riddles.jsonl` | Пословицы и загадки для детей | JSONL |
+| `kyrgyz_conversations.jsonl` | Диалоги полностью на кыргызском (суроо-жооп) | JSONL |
+| `kyrgyz_phrases.jsonl` | Разговорник: повседневные фразы RU→KY | JSONL |
 | `grammar.md` | Грамматика кыргызского (падежи, гармония, глаголы) | Markdown |
 | `phrasebook` (в `data/knowledge.js`) | Разговорник для сайта | JS |
 
