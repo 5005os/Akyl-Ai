@@ -550,12 +550,14 @@
 
     const typing = addTyping();
     try {
-      // 1) Сначала — точная база проекта (законы КР, факты, память). Это приоритет.
       await new Promise(function (r) { setTimeout(r, 200); });
       const mood = detectMood(question);
-      let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question) || smallTalk(question) || offlineAnswer(question) || bankSearch(question);
 
-      // 2) Если в базе ответа нет — своя модель AkylAi в браузере (без чужих ИИ).
+      // 1) Точные вещи остаются жёсткими шаблонами — там нельзя ошибаться:
+      //    статьи УК КР (можно выдумать номер/текст), калькулятор, память имени.
+      let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question);
+
+      // 2) Всё остальное — сразу через настоящий ИИ (WebLLM), а не шаблонные фразы.
       if (!answer) {
         try {
           const bubble = typing.querySelector(".bubble");
@@ -563,9 +565,13 @@
             if (bubble) bubble.textContent = "🌐 " + txt;
           });
         } catch (e) {
-          answer = "Я отвечаю по своей базе знаний (законы КР, кыргызский язык, ПДД, Конституция, " +
-            "история, культура, туризм, школа). Свободный режим (модель в браузере) сейчас недоступен: " + e.message + " " +
-            "Спросите по этим темам — отвечу из базы.";
+          // ИИ недоступен (например, браузер без WebGPU) — тогда запасной вариант из базы.
+          answer = smallTalk(question) || offlineAnswer(question) || bankSearch(question);
+          if (!answer) {
+            answer = "Свободный ИИ-режим сейчас недоступен: " + e.message + " " +
+              "Пока отвечаю по своей базе знаний (законы КР, кыргызский язык, ПДД, Конституция, " +
+              "история, культура, туризм, школа) — спросите по этим темам.";
+          }
         }
       }
 
