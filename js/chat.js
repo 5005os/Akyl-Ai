@@ -5,9 +5,10 @@
   // ---------- Хранилище настроек ----------
   const LS_KEY = "aikg_api_key";          // ключ выбранного провайдера
   const LS_PROVIDER = "aikg_provider";    // 'gemini' | 'claude'
-  const CFG = window.AIKG_CONFIG || {};
-  // ключ берём: 1) из настроек пользователя, иначе 2) общий ключ из config.js
-  const getKey = () => localStorage.getItem(LS_KEY) || CFG.AI_KEY || "";
+  // ключ берём только из настроек пользователя — он хранится у него локально
+  // и никогда не должен попадать в клиентский код (это статический сайт,
+  // любой ключ в config.js был бы виден всем посетителям).
+  const getKey = () => localStorage.getItem(LS_KEY) || "";
   const getProvider = () => localStorage.getItem(LS_PROVIDER) || "free";
   const needsKey = () => getProvider() !== "free";
 
