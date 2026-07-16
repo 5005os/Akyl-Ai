@@ -555,9 +555,13 @@
 
       // 1) Точные вещи остаются жёсткими шаблонами — там нельзя ошибаться:
       //    статьи УК КР (можно выдумать номер/текст), калькулятор, память имени.
-      let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question);
+      //    Сюда же — bankSearch: это не шаблонная фраза, а поиск с порогом уверенности
+      //    по 1200+ проверенным фактам; маленькая браузерная модель (Qwen 1.5B) на таких
+      //    фактических вопросах (особенно на кыргызском) может галлюцинировать вместо
+      //    точного ответа, поэтому проверенный факт из базы приоритетнее догадки ИИ.
+      let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question) || bankSearch(question);
 
-      // 2) Всё остальное — сразу через настоящий ИИ (WebLLM), а не шаблонные фразы.
+      // 2) Всё остальное (малый ток, общие вопросы не из базы) — через ИИ (WebLLM).
       if (!answer) {
         try {
           const bubble = typing.querySelector(".bubble");
@@ -566,7 +570,7 @@
           });
         } catch (e) {
           // ИИ недоступен (например, браузер без WebGPU) — тогда запасной вариант из базы.
-          answer = smallTalk(question) || offlineAnswer(question) || bankSearch(question);
+          answer = smallTalk(question) || offlineAnswer(question);
           if (!answer) {
             answer = "Свободный ИИ-режим сейчас недоступен: " + e.message + " " +
               "Пока отвечаю по своей базе знаний (законы КР, кыргызский язык, ПДД, Конституция, " +
