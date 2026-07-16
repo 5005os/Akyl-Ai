@@ -527,6 +527,28 @@
     return answer;
   }
 
+  // ---- Бесплатный облачный ИИ (pollinations.ai, без ключа) — пробуем ПЕРВЫМ:
+  // настоящая большая модель на сервере, отвечает намного умнее и живее, чем
+  // крошечная локальная Qwen-1.5B в браузере, и не требует загрузки ~1ГБ.
+  async function askCloudFree(question) {
+    const recent = convo.slice(-6);
+    const messages = [{ role: "system", content: SYSTEM_PROMPT }]
+      .concat(recent, [{ role: "user", content: question }]);
+    const res = await fetch("https://text.pollinations.ai/openai", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ model: "openai", messages: messages })
+    });
+    if (!res.ok) throw new Error("облачный ИИ занят (" + res.status + ")");
+    const data = await res.json();
+    const msg = data && data.choices && data.choices[0] && data.choices[0].message;
+    const answer = (msg && msg.content || "").trim();
+    if (!answer) throw new Error("пустой ответ от облачного ИИ");
+    convo.push({ role: "user", content: question });
+    convo.push({ role: "assistant", content: answer });
+    return answer;
+  }
+
   // Команда очистки памяти: «забудь», «очисти историю», «начни заново»
   function isClearCommand(question) {
     return /(забудь( всё| все)?|очисти( историю| чат)?|начни заново|стереть историю|clear)/.test(question.toLowerCase().trim());
@@ -561,20 +583,25 @@
       //    точного ответа, поэтому проверенный факт из базы приоритетнее догадки ИИ.
       let answer = nameMemory(question) || detailRequest(question) || lookupLaw(question) || calcAnswer(question) || bankSearch(question);
 
-      // 2) Всё остальное (малый ток, общие вопросы не из базы) — через ИИ (WebLLM).
+      // 2) Всё остальное (малый ток, общие вопросы не из базы) — через ИИ.
+      //    Сначала облачный (умнее и без загрузки ~1ГБ), при сбое — локальная модель в браузере.
       if (!answer) {
         try {
-          const bubble = typing.querySelector(".bubble");
-          answer = await askWebLLM(question, function (txt) {
-            if (bubble) bubble.textContent = "🌐 " + txt;
-          });
-        } catch (e) {
-          // ИИ недоступен (например, браузер без WebGPU) — тогда запасной вариант из базы.
-          answer = smallTalk(question) || offlineAnswer(question);
-          if (!answer) {
-            answer = "Свободный ИИ-режим сейчас недоступен: " + e.message + " " +
-              "Пока отвечаю по своей базе знаний (законы КР, кыргызский язык, ПДД, Конституция, " +
-              "история, культура, туризм, школа) — спросите по этим темам.";
+          answer = await askCloudFree(question);
+        } catch (cloudErr) {
+          try {
+            const bubble = typing.querySelector(".bubble");
+            answer = await askWebLLM(question, function (txt) {
+              if (bubble) bubble.textContent = "🌐 " + txt;
+            });
+          } catch (e) {
+            // ИИ недоступен (например, браузер без WebGPU) — тогда запасной вариант из базы.
+            answer = smallTalk(question) || offlineAnswer(question);
+            if (!answer) {
+              answer = "Свободный ИИ-режим сейчас недоступен: " + e.message + " " +
+                "Пока отвечаю по своей базе знаний (законы КР, кыргызский язык, ПДД, Конституция, " +
+                "история, культура, туризм, школа) — спросите по этим темам.";
+            }
           }
         }
       }
